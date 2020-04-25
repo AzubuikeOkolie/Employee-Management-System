@@ -30,11 +30,20 @@ namespace EmployeeManagement.Controllers
             return View(model);
 
         }
-        public ViewResult Details(int id)
+        public ViewResult Details(int? id)
         {
+            Employee employee = _employeRepository.GetEmployee(id.Value);
+            if (employee == null)
+            {
+                Response.StatusCode = 400;
+                return View("EmployeeNotFound", id.Value);
+            }
+
+
+
             HomeDetailsViewModel homeDetailsViewModel = new HomeDetailsViewModel()
             {
-                Employee = _employeRepository.GetEmployee(id),
+                Employee = employee,
                 PageTitle = "Employee Details"
             };
 
@@ -74,7 +83,7 @@ namespace EmployeeManagement.Controllers
                 if (model.ExistingPhotoPath != null)
                 {
                    string filePath = Path.Combine(hostingEnvironment.WebRootPath, 
-                        "Images", model.ExistingPhotoPath);
+                        "Images", model.ExistingPhotoPath); 
                     System.IO.File.Delete(filePath);
                 }
                employee.PhotoPath  = ProcesUploadedFile(model);
@@ -87,19 +96,22 @@ namespace EmployeeManagement.Controllers
             return View();
         }
 
-        private string ProcesUploadedFile(EmployeeEditViewModel model)
+        private string ProcesUploadedFile(EmployeeCreateViewModel model)
         {
             string uniqueFileName = null;
-            if (model.Photos != null && model.Photos.Count > 0)
+            if (model.Photo != null )
             {
-                foreach (IFormFile photo in model.Photos)
-                {
+               
                     string uploadsFolder = Path.Combine(hostingEnvironment.WebRootPath, "Images");
-                    uniqueFileName = Guid.NewGuid().ToString() + "_" + photo.FileName;
+                    uniqueFileName = Guid.NewGuid().ToString() + "_" + model.Photo.FileName;
                     string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    photo.CopyTo(new FileStream(filePath, FileMode.Create));
-
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    model.Photo.CopyTo(fileStream);
                 }
+                   
+
+               
             }
 
             return uniqueFileName;
@@ -110,16 +122,13 @@ namespace EmployeeManagement.Controllers
         {
             if (ModelState.IsValid) {
                 string uniqueFileName = null;
-                if (model.Photos != null && model.Photos.Count > 0)
+                if (model.Photo != null )
                 {
-                    foreach (IFormFile photo in model.Photos)
-                    {
-                        string uploadsFolder = Path.Combine(hostingEnvironment.WebRootPath, "Images");
-                        uniqueFileName = Guid.NewGuid().ToString() + "_" + photo.FileName;
-                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                        photo.CopyTo(new FileStream(filePath, FileMode.Create));
 
-                    }
+                    string uploadsFolder = ProcesUploadedFile(model);
+                        
+
+                    
                 } 
 
                 Employee newEmployee = new Employee
