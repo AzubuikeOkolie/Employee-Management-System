@@ -1,8 +1,10 @@
 ﻿using EmployeeManagement.Models;
 using EmployeeManagement.ViewModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,27 +13,43 @@ using System.Threading.Tasks;
 
 namespace EmployeeManagement.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly IEmployeRepository _employeRepository;
-
+        [Obsolete]
         private IHostingEnvironment hostingEnvironment;
+        private readonly ILogger logger;
 
+        [Obsolete]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1041:Provide ObsoleteAttribute message", Justification = "<Pending>")]
         public HomeController(IEmployeRepository employeRepository,
-                               IHostingEnvironment hostingEnvironment)
+                               IHostingEnvironment hostingEnvironment,
+                               ILogger<HomeController> logger)
         {
             _employeRepository = employeRepository;
             this.hostingEnvironment = hostingEnvironment;
+            this.logger = logger;
         }
 
+        [AllowAnonymous]
         public ViewResult Index()
         {
             var model = _employeRepository.GetAllEmployees();
             return View(model);
 
         }
+        [AllowAnonymous]
         public ViewResult Details(int? id)
         {
+
+            logger.LogTrace("Trace Log");
+            logger.LogDebug("Debug Log");
+            logger.LogInformation("Information Log");
+            logger.LogWarning("Warning Log");
+            logger.LogError("Error Log");
+            logger.LogCritical("Critical Log");
+
             Employee employee = _employeRepository.GetEmployee(id.Value);
             if (employee == null)
             {
@@ -50,12 +68,14 @@ namespace EmployeeManagement.Controllers
             return View(homeDetailsViewModel);
         }
         [HttpGet]
+       
         public ViewResult Create()
         {
             return View();
         }
 
         [HttpGet]
+       
         public ViewResult Edit(int id)
         {
             Employee employee = _employeRepository.GetEmployee(id);
@@ -72,6 +92,7 @@ namespace EmployeeManagement.Controllers
         }
 
         [HttpPost]
+       
         public IActionResult Edit(EmployeeEditViewModel model)
         {
             if (ModelState.IsValid)
@@ -118,7 +139,8 @@ namespace EmployeeManagement.Controllers
         }
 
         [HttpPost]
-          public IActionResult Create(EmployeeCreateViewModel model )
+       
+        public IActionResult Create(EmployeeCreateViewModel model )
         {
             if (ModelState.IsValid) {
                 string uniqueFileName = null;

@@ -21,15 +21,15 @@ namespace EmployeeManagement.Controllers
             this.logger = logger;
         }
         [Route("Error/{StatusCode}")]
-        public IActionResult Index(int StatusCode)
+        public IActionResult HttpStatusCodeHandler(int StatusCode)
         {
             var StatusCodeResult = HttpContext.Features.Get<IStatusCodeReExecuteFeature>();
             switch (StatusCode)
             {
                 case 404:
                     ViewBag.ErrorMessage = "Sorry, the resource cannot be found";
-                    ViewBag.Path = StatusCodeResult.OriginalPath;
-                    ViewBag.QS = StatusCodeResult.OriginalQueryString; 
+                    logger.LogWarning($"404 Error occured. Path = {StatusCodeResult.OriginalPath}" +
+                        $"and QueryString = {StatusCodeResult.OriginalQueryString}");
                     break;
             }
             return View("NotFound");
@@ -39,7 +39,6 @@ namespace EmployeeManagement.Controllers
        public IActionResult Error()
         {
             var exceptionDetails = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
-
             logger.LogError($"The path {exceptionDetails.Path} threw an exception " +
                 $"{exceptionDetails.Error}");
 
